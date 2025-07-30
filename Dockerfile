@@ -23,12 +23,12 @@ RUN chmod +x /docker-entrypoint.sh
 # Set environment variable for database path
 ENV PMAN_DB_PATH=/data/pman.db
 
-# Default UID/GID (can be overridden at runtime)
+# Default UID/GID
 ENV PMAN_UID=987
 ENV PMAN_GID=987
 
 # Expose port
-EXPOSE 8080
+EXPOSE 5000
 
 # Use entrypoint script
 ENTRYPOINT ["/docker-entrypoint.sh"]

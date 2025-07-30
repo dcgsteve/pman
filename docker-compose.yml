@@ -3,7 +3,7 @@ services:
     image: dcgsteve/pman-server:1.0.1
     container_name: pman-server
     ports:
-      - "8080:8080"
+      - "8080:5000"
     volumes:
       - ./data:/data
     environment:
@@ -15,7 +15,7 @@ services:
       - PMAN_GID=${PMAN_GID:-1000}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3

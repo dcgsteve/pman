@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION=1.0.0
+VERSION=$(grep 'Version = ' cli/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
 BINARY_NAME="pman"
 RELEASES_DIR="releases"
 

@@ -18,6 +18,24 @@ import (
 	"golang.org/x/term"
 )
 
+// expandCombinedFlags expands combined single-character flags like -rf into -r -f
+func expandCombinedFlags(args []string) []string {
+	var expanded []string
+
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "-") && len(arg) > 2 && arg[1] != '-' {
+			// This is a combined flag like -rf
+			for i := 1; i < len(arg); i++ {
+				expanded = append(expanded, "-"+string(arg[i]))
+			}
+		} else {
+			expanded = append(expanded, arg)
+		}
+	}
+
+	return expanded
+}
+
 func ShowHelp() {
 	fmt.Println("pman - Password Manager")
 	fmt.Println("Usage: pman <command> [options]")
@@ -106,14 +124,14 @@ func getEditor() string {
 	if editor := os.Getenv("VISUAL"); editor != "" {
 		return editor
 	}
-	
+
 	editors := []string{"nano", "vim", "vi", "code", "notepad"}
 	for _, editor := range editors {
 		if _, err := exec.LookPath(editor); err == nil {
 			return editor
 		}
 	}
-	
+
 	return "vi"
 }
 
@@ -157,12 +175,14 @@ func confirmAction(message string) bool {
 }
 
 func Login(args []string) {
+	args = expandCombinedFlags(args)
+
 	fs := flag.NewFlagSet("login", flag.ExitOnError)
 	server := fs.String("s", "", "Server URL")
 	email := fs.String("u", "", "Email address")
 	password := fs.String("p", "", "Password")
 	expireDays := fs.Int("expire", 0, "Token expiry in days")
-	
+
 	fs.Parse(args)
 
 	cfg, err := config.LoadConfig()
@@ -289,10 +309,12 @@ func SetGroup(args []string) {
 }
 
 func Add(args []string) {
+	args = expandCombinedFlags(args)
+
 	fs := flag.NewFlagSet("add", flag.ExitOnError)
 	groupFlag := fs.String("g", "", "Group name")
 	groupLongFlag := fs.String("group", "", "Group name")
-	
+
 	fs.Parse(args)
 	remainingArgs := fs.Args()
 
@@ -302,12 +324,12 @@ func Add(args []string) {
 	}
 
 	path := remainingArgs[0]
-	
+
 	group := *groupFlag
 	if group == "" {
 		group = *groupLongFlag
 	}
-	
+
 	resolvedGroup, err := resolveGroup(group)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -351,10 +373,12 @@ func Add(args []string) {
 }
 
 func Get(args []string) {
+	args = expandCombinedFlags(args)
+
 	fs := flag.NewFlagSet("get", flag.ExitOnError)
 	groupFlag := fs.String("g", "", "Group name")
 	groupLongFlag := fs.String("group", "", "Group name")
-	
+
 	fs.Parse(args)
 	remainingArgs := fs.Args()
 
@@ -364,12 +388,12 @@ func Get(args []string) {
 	}
 
 	path := remainingArgs[0]
-	
+
 	group := *groupFlag
 	if group == "" {
 		group = *groupLongFlag
 	}
-	
+
 	resolvedGroup, err := resolveGroup(group)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -392,10 +416,12 @@ func Get(args []string) {
 }
 
 func List(args []string) {
+	args = expandCombinedFlags(args)
+
 	fs := flag.NewFlagSet("list", flag.ExitOnError)
 	groupFlag := fs.String("g", "", "Group name")
 	groupLongFlag := fs.String("group", "", "Group name")
-	
+
 	fs.Parse(args)
 	remainingArgs := fs.Args()
 
@@ -408,7 +434,7 @@ func List(args []string) {
 	if group == "" {
 		group = *groupLongFlag
 	}
-	
+
 	resolvedGroup, err := resolveGroup(group)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -436,10 +462,12 @@ func List(args []string) {
 }
 
 func Edit(args []string) {
+	args = expandCombinedFlags(args)
+
 	fs := flag.NewFlagSet("edit", flag.ExitOnError)
 	groupFlag := fs.String("g", "", "Group name")
 	groupLongFlag := fs.String("group", "", "Group name")
-	
+
 	fs.Parse(args)
 	remainingArgs := fs.Args()
 
@@ -449,12 +477,12 @@ func Edit(args []string) {
 	}
 
 	path := remainingArgs[0]
-	
+
 	group := *groupFlag
 	if group == "" {
 		group = *groupLongFlag
 	}
-	
+
 	resolvedGroup, err := resolveGroup(group)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -513,12 +541,14 @@ func Edit(args []string) {
 }
 
 func Delete(args []string) {
+	args = expandCombinedFlags(args)
+
 	fs := flag.NewFlagSet("delete", flag.ExitOnError)
 	groupFlag := fs.String("g", "", "Group name")
 	groupLongFlag := fs.String("group", "", "Group name")
 	forceFlag := fs.Bool("f", false, "Force deletion without confirmation")
 	recursiveFlag := fs.Bool("r", false, "Recursive deletion")
-	
+
 	fs.Parse(args)
 	remainingArgs := fs.Args()
 
@@ -528,12 +558,12 @@ func Delete(args []string) {
 	}
 
 	path := remainingArgs[0]
-	
+
 	group := *groupFlag
 	if group == "" {
 		group = *groupLongFlag
 	}
-	
+
 	resolvedGroup, err := resolveGroup(group)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -554,7 +584,7 @@ func Delete(args []string) {
 		} else {
 			message = fmt.Sprintf("Are you sure you want to delete '%s'", path)
 		}
-		
+
 		if !confirmAction(message) {
 			fmt.Println("Deletion cancelled")
 			return
@@ -567,7 +597,7 @@ func Delete(args []string) {
 			fmt.Fprintf(os.Stderr, "Error deleting passwords: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		if count == 1 {
 			fmt.Printf("Successfully deleted 1 password\n")
 		} else {
@@ -578,17 +608,19 @@ func Delete(args []string) {
 			fmt.Fprintf(os.Stderr, "Error deleting password: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		fmt.Printf("Successfully deleted: %s\n", path)
 	}
 }
 
 func Info(args []string) {
+	args = expandCombinedFlags(args)
+
 	fs := flag.NewFlagSet("info", flag.ExitOnError)
 	groupFlag := fs.String("g", "", "Group name")
 	groupLongFlag := fs.String("group", "", "Group name")
 	jsonFlag := fs.Bool("json", false, "Output in JSON format")
-	
+
 	fs.Parse(args)
 	remainingArgs := fs.Args()
 
@@ -598,12 +630,12 @@ func Info(args []string) {
 	}
 
 	path := remainingArgs[0]
-	
+
 	group := *groupFlag
 	if group == "" {
 		group = *groupLongFlag
 	}
-	
+
 	resolvedGroup, err := resolveGroup(group)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -633,19 +665,21 @@ func Info(args []string) {
 		fmt.Printf("Path: %s\n", passwordInfo.Path)
 		fmt.Printf("Created by: %s\n", passwordInfo.CreatedBy)
 		fmt.Printf("Created at: %s\n", passwordInfo.CreatedAt.Format("2006-01-02 15:04:05"))
-		fmt.Printf("Updated by: %s\n", passwordInfo.UpdatedBy)
-		fmt.Printf("Updated at: %s\n", passwordInfo.UpdatedAt.Format("2006-01-02 15:04:05"))
+		fmt.Printf("Last Updated by: %s\n", passwordInfo.UpdatedBy)
+		fmt.Printf("Last Updated at: %s\n", passwordInfo.UpdatedAt.Format("2006-01-02 15:04:05"))
 	}
 }
 
 func Status(args []string) {
+	args = expandCombinedFlags(args)
+
 	fs := flag.NewFlagSet("status", flag.ExitOnError)
 	serverFlag := fs.String("s", "", "Server URL to check (defaults to configured server)")
-	
+
 	fs.Parse(args)
 
 	var serverURL string
-	
+
 	if *serverFlag != "" {
 		serverURL = *serverFlag
 		if !strings.HasPrefix(serverURL, "http://") && !strings.HasPrefix(serverURL, "https://") {
@@ -657,18 +691,18 @@ func Status(args []string) {
 			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		if cfg.Server == "" {
 			fmt.Fprintf(os.Stderr, "No server configured. Please login first or specify server with -s flag\n")
 			os.Exit(1)
 		}
-		
+
 		serverURL = cfg.Server
 	}
 
 	// Create client without token for health check
 	client := client.NewClient(serverURL, "")
-	
+
 	if err := client.CheckHealth(); err != nil {
 		fmt.Printf("Server not OK (%s)\n", err.Error())
 		os.Exit(1)
@@ -705,9 +739,11 @@ func UserAdd(args []string) {
 }
 
 func UserDel(args []string) {
+	args = expandCombinedFlags(args)
+
 	fs := flag.NewFlagSet("userdel", flag.ExitOnError)
 	forceFlag := fs.Bool("f", false, "Force deletion without confirmation")
-	
+
 	fs.Parse(args)
 	remainingArgs := fs.Args()
 
@@ -767,9 +803,11 @@ func UserUpdate(args []string) {
 }
 
 func UserList(args []string) {
+	args = expandCombinedFlags(args)
+
 	fs := flag.NewFlagSet("userlist", flag.ExitOnError)
 	jsonFlag := fs.Bool("json", false, "Output in JSON format")
-	
+
 	fs.Parse(args)
 
 	client, err := getAuthenticatedClient()
@@ -799,7 +837,7 @@ func UserList(args []string) {
 
 		fmt.Printf("%-30s %-10s %-15s %s\n", "EMAIL", "ROLE", "STATUS", "GROUPS")
 		fmt.Printf("%-30s %-10s %-15s %s\n", strings.Repeat("-", 30), strings.Repeat("-", 10), strings.Repeat("-", 15), strings.Repeat("-", 20))
-		
+
 		for _, user := range users {
 			status := "enabled"
 			if !user.Enabled {

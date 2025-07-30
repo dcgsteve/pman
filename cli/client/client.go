@@ -139,7 +139,7 @@ func (c *Client) ListPasswords(group, pathPrefix string) ([]string, error) {
 	if pathPrefix != "" {
 		endpoint += fmt.Sprintf("?prefix=%s", pathPrefix)
 	}
-	
+
 	resp, err := c.makeRequest("GET", endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %v", err)

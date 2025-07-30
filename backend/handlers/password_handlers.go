@@ -198,7 +198,3 @@ func (h *Handlers) GetPasswordInfo(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, info)
 }
-
-func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, map[string]string{"status": "OK"})
-}

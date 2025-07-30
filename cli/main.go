@@ -8,9 +8,7 @@ import (
 )
 
 var (
-	Version   = "dev"
-	BuildTime = "unknown"
-	CommitSHA = "unknown"
+	Version = "1.0.2"
 )
 
 func main() {
@@ -42,9 +40,7 @@ func main() {
 	case "info":
 		commands.Info(args)
 	case "version":
-		fmt.Printf("pman version %s\n", Version)
-		fmt.Printf("Built: %s\n", BuildTime)
-		fmt.Printf("Commit: %s\n", CommitSHA)
+		fmt.Printf("pman: v%s\n", Version)
 	case "status":
 		commands.Status(args)
 	case "useradd":

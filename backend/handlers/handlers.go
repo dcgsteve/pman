@@ -60,3 +60,10 @@ func writeError(w http.ResponseWriter, message string, code int) {
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(map[string]string{"error": message})
 }
+
+func (h *Handlers) Health(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, map[string]string{
+		"status": "healthy",
+		"service": "pman-server",
+	})
+}
