@@ -1,0 +1,165 @@
+# PMAN Password Manager .gitignore
+
+# Built binaries, data etc
+releases/
+dist/
+data/
+tasks.md
+
+# Go build artifacts
+*.out
+*.test
+*.prof
+
+# Go module cache
+go.sum
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+pman.db*
+
+# Configuration files (contain sensitive data)
+config.json
+.pman/
+*.env
+.env*
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-*
+.vim/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Archive files (from cross-platform builds)
+*.tar.gz
+*.zip
+*.tar.bz2
+*.tar.xz
+
+# Development and testing
+coverage.out
+coverage.html
+*.cover
+test-results/
+.test/
+
+# Deployment specific
+deploy-config.sh
+production.env
+staging.env
+
+# Security keys and certificates
+*.key
+*.pem
+*.crt
+*.cert
+*.p12
+*.pfx
+
+# Runtime files
+*.pid
+*.sock
+
+# Vendor directory (if using vendor mode)
+vendor/
+
+# Air live reload tool
+.air.toml
+tmp/
+
+# Local development overrides
+local.env
+dev.env
+debug.env
+
+# Backup directories
+backups/
+backup/
+
+# Documentation build artifacts
+docs/_build/
+docs/site/
+
+# Package files
+*.deb
+*.rpm
+*.pkg
+*.dmg
+*.msi
+
+# Profiling data
+cpu.prof
+mem.prof
+block.prof
+mutex.prof
+
+# Coverage reports
+coverage/
+htmlcov/
+
+# Test databases
+test.db
+test_*.db
+*_test.db
+
+# Local configuration overrides
+config.local.json
+settings.local.json
+
+# IDE specific files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
+
+# Generated documentation
+*.pdf
+docs.html
+
+# Local scripts that shouldn't be shared
+local-*.sh
+dev-*.sh
+test-local.sh
+
+# Encryption keys (should never be in repo)
+encryption.key
+*.key.txt
+
+# Local build overrides
+build.local.sh
+Makefile.local

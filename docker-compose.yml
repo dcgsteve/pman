@@ -1,0 +1,22 @@
+services:
+  pman-server:
+    image: dcgsteve/pman-server:1.0.1
+    container_name: pman-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      - PMAN_ENCRYPTION_KEY=${PMAN_ENCRYPTION_KEY:-your-encryption-key-here}
+      - PMAN_DOMAIN_NAME=${PMAN_DOMAIN_NAME:-localhost:8080}
+      - PMAN_DEFAULT_EXPIRE_DAYS=${PMAN_DEFAULT_EXPIRE_DAYS:-24}
+      - PMAN_DB_PATH=/data/pman.db
+      - PMAN_UID=${PMAN_UID:-1000}
+      - PMAN_GID=${PMAN_GID:-1000}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
