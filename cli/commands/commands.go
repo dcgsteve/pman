@@ -53,6 +53,7 @@ func ShowHelp() {
 	fmt.Println("  version     Show version")
 	fmt.Println("  status      Show server status")
 	fmt.Println("  passwd      Change password")
+	fmt.Println("  whoami      Show current user, server and default group")
 	fmt.Println("")
 	fmt.Println("Admin commands:")
 	fmt.Println("  useradd     Add user")
@@ -890,6 +891,30 @@ func UserEnable(args []string) {
 	}
 
 	fmt.Printf("User enabled successfully: %s\n", email)
+}
+
+func Whoami(args []string) {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
+		os.Exit(1)
+	}
+
+	if cfg.Token == "" {
+		fmt.Fprintf(os.Stderr, "Not logged in. Please run 'pman login' first\n")
+		os.Exit(1)
+	}
+
+	fmt.Printf("User: %s\n", cfg.Email)
+	fmt.Printf("Server: %s\n", cfg.Server)
+
+	// Show the effective default group
+	effectiveGroup := config.GetGroup()
+	if effectiveGroup == "" {
+		fmt.Printf("Default group: (not set)\n")
+	} else {
+		fmt.Printf("Active group: %s\n", effectiveGroup)
+	}
 }
 
 func Passwd(args []string) {

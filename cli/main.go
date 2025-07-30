@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	Version = "1.0.2"
+	Version = "1.0.3"
 )
 
 func main() {
@@ -57,6 +57,8 @@ func main() {
 		commands.UserEnable(args)
 	case "passwd":
 		commands.Passwd(args)
+	case "whoami":
+		commands.Whoami(args)
 	case "help", "--help", "-h":
 		commands.ShowHelp()
 	default:
