@@ -11,6 +11,10 @@ import (
 	"github.com/steve/pman/shared/config"
 )
 
+var (
+	Version = "1.0.1"
+)
+
 func main() {
 	if err := config.ValidateEnvVars(); err != nil {
 		log.Fatalf("Environment validation failed: %v", err)
