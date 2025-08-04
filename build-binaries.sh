@@ -4,7 +4,8 @@
 
 set -e
 
-VERSION=$(grep 'Version = ' cli/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
+CLI_VERSION=$(grep 'Version = ' cli/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
+SERVER_VERSION=$(grep 'Version = ' backend/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
 BINARY_NAME="pman"
 RELEASES_DIR="releases"
 
@@ -23,7 +24,7 @@ declare -a COMPONENTS=(
     "cli:cli/main.go"
 )
 
-echo "Building $BINARY_NAME version: $VERSION"
+echo "Building $BINARY_NAME - CLI version: $CLI_VERSION, Server version: $SERVER_VERSION"
 
 # Create releases directory
 mkdir -p "$RELEASES_DIR"
@@ -47,9 +48,17 @@ build_binary() {
     
     echo "Building $component_name for $os/$arch..."
     
+    # Determine version based on component
+    local version=""
+    if [ "$component_name" = "cli" ]; then
+        version=$CLI_VERSION
+    elif [ "$component_name" = "server" ]; then
+        version=$SERVER_VERSION
+    fi
+    
     # Pure Go build for all components (now that we're using modernc.org/sqlite)
     CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build \
-        -ldflags "-X main.Version=$VERSION -s -w" \
+        -ldflags "-X main.Version=$version -s -w" \
         -a -installsuffix nocgo \
         -o "$output_path" \
         "$source_path"
@@ -78,7 +87,8 @@ ls -la "$RELEASES_DIR"
 
 echo ""
 echo "Summary:"
-echo "- Version: $VERSION"
+echo "- CLI Version: $CLI_VERSION"
+echo "- Server Version: $SERVER_VERSION"
 echo "- Platforms: ${#BUILD_TARGETS[@]}"
 echo "- Components: ${#COMPONENTS[@]}"
 echo "- Total binaries: $((${#BUILD_TARGETS[@]} * ${#COMPONENTS[@]}))"
