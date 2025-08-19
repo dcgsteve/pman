@@ -1,11 +1,34 @@
 #!/bin/bash
 
 # Build script for pman - creates binaries for multiple platforms and architectures
+# Usage: ./build-binaries.sh [server|client|both]
+# Default: both
 
 set -e
 
-CLI_VERSION=$(grep 'Version = ' cli/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
-SERVER_VERSION=$(grep 'Version = ' backend/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
+# Parse command line arguments
+BUILD_TYPE="${1:-both}"
+
+# Validate argument
+if [[ "$BUILD_TYPE" != "server" && "$BUILD_TYPE" != "client" && "$BUILD_TYPE" != "both" ]]; then
+    echo "Usage: $0 [server|client|both]"
+    echo "  server - Build only server binaries"
+    echo "  client - Build only client binaries"
+    echo "  both   - Build both binaries (default)"
+    exit 1
+fi
+
+CLI_VERSION=""
+SERVER_VERSION=""
+
+if [[ "$BUILD_TYPE" == "client" || "$BUILD_TYPE" == "both" ]]; then
+    CLI_VERSION=$(grep 'Version = ' cli/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
+fi
+
+if [[ "$BUILD_TYPE" == "server" || "$BUILD_TYPE" == "both" ]]; then
+    SERVER_VERSION=$(grep 'Version = ' backend/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
+fi
+
 BINARY_NAME="pman"
 RELEASES_DIR="releases"
 
@@ -18,13 +41,28 @@ declare -a BUILD_TARGETS=(
     "darwin:arm64"
 )
 
-# Define components to build
-declare -a COMPONENTS=(
-    "server:backend/main.go"
-    "cli:cli/main.go"
-)
+# Define components to build based on BUILD_TYPE
+declare -a COMPONENTS=()
 
-echo "Building $BINARY_NAME - CLI version: $CLI_VERSION, Server version: $SERVER_VERSION"
+if [[ "$BUILD_TYPE" == "server" || "$BUILD_TYPE" == "both" ]]; then
+    COMPONENTS+=("server:backend/main.go")
+fi
+
+if [[ "$BUILD_TYPE" == "client" || "$BUILD_TYPE" == "both" ]]; then
+    COMPONENTS+=("cli:cli/main.go")
+fi
+
+# Build version display string
+VERSION_INFO=""
+if [[ "$BUILD_TYPE" == "client" ]]; then
+    VERSION_INFO="CLI version: $CLI_VERSION"
+elif [[ "$BUILD_TYPE" == "server" ]]; then
+    VERSION_INFO="Server version: $SERVER_VERSION"
+else
+    VERSION_INFO="CLI version: $CLI_VERSION, Server version: $SERVER_VERSION"
+fi
+
+echo "Building $BINARY_NAME - $VERSION_INFO"
 
 # Create releases directory
 mkdir -p "$RELEASES_DIR"
@@ -87,8 +125,13 @@ ls -la "$RELEASES_DIR"
 
 echo ""
 echo "Summary:"
-echo "- CLI Version: $CLI_VERSION"
-echo "- Server Version: $SERVER_VERSION"
+if [[ "$BUILD_TYPE" == "client" || "$BUILD_TYPE" == "both" ]]; then
+    echo "- CLI Version: $CLI_VERSION"
+fi
+if [[ "$BUILD_TYPE" == "server" || "$BUILD_TYPE" == "both" ]]; then
+    echo "- Server Version: $SERVER_VERSION"
+fi
+echo "- Build type: $BUILD_TYPE"
 echo "- Platforms: ${#BUILD_TARGETS[@]}"
 echo "- Components: ${#COMPONENTS[@]}"
 echo "- Total binaries: $((${#BUILD_TARGETS[@]} * ${#COMPONENTS[@]}))"

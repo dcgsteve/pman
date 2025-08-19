@@ -2,15 +2,36 @@
 
 # GitHub Release Creation Script for pman
 # Creates separate releases for server and CLI binaries
+# Usage: ./create-github-releases.sh [server|client|both]
+# Default: both
 
 set -e
 
-# Get versions from source files
-CLI_VERSION=$(grep 'Version = ' cli/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
-SERVER_VERSION=$(grep 'Version = ' backend/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
+# Parse command line arguments
+RELEASE_TYPE="${1:-both}"
 
-echo "CLI Version: $CLI_VERSION"
-echo "Server Version: $SERVER_VERSION"
+# Validate argument
+if [[ "$RELEASE_TYPE" != "server" && "$RELEASE_TYPE" != "client" && "$RELEASE_TYPE" != "both" ]]; then
+    echo "Usage: $0 [server|client|both]"
+    echo "  server - Create only server release"
+    echo "  client - Create only client release"
+    echo "  both   - Create both releases (default)"
+    exit 1
+fi
+
+# Get versions from source files
+CLI_VERSION=""
+SERVER_VERSION=""
+
+if [[ "$RELEASE_TYPE" == "client" || "$RELEASE_TYPE" == "both" ]]; then
+    CLI_VERSION=$(grep 'Version = ' cli/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
+    echo "CLI Version: $CLI_VERSION"
+fi
+
+if [[ "$RELEASE_TYPE" == "server" || "$RELEASE_TYPE" == "both" ]]; then
+    SERVER_VERSION=$(grep 'Version = ' backend/main.go | sed 's/.*Version = "\(.*\)".*/\1/')
+    echo "Server Version: $SERVER_VERSION"
+fi
 
 # Check if gh is installed
 if ! command -v gh &> /dev/null; then
@@ -123,32 +144,36 @@ Run the server:
 
 For more information, see the [documentation](https://github.com/dcgsteve/pman#readme)."
 
-# Create CLI release
-CLI_FILES=""
-for file in releases/pman-cli-*; do
-    if [ -f "$file" ]; then
-        CLI_FILES="$CLI_FILES $file"
-    fi
-done
+# Create CLI release if requested
+if [[ "$RELEASE_TYPE" == "client" || "$RELEASE_TYPE" == "both" ]]; then
+    CLI_FILES=""
+    for file in releases/pman-cli-*; do
+        if [ -f "$file" ]; then
+            CLI_FILES="$CLI_FILES $file"
+        fi
+    done
 
-if [ -n "$CLI_FILES" ]; then
-    create_release "cli-v$CLI_VERSION" "pman CLI v$CLI_VERSION" "$CLI_NOTES" "$CLI_FILES"
-else
-    echo "Warning: No CLI binaries found in releases/"
+    if [ -n "$CLI_FILES" ]; then
+        create_release "cli-v$CLI_VERSION" "pman CLI v$CLI_VERSION" "$CLI_NOTES" "$CLI_FILES"
+    else
+        echo "Warning: No CLI binaries found in releases/"
+    fi
 fi
 
-# Create Server release
-SERVER_FILES=""
-for file in releases/pman-server-*; do
-    if [ -f "$file" ]; then
-        SERVER_FILES="$SERVER_FILES $file"
-    fi
-done
+# Create Server release if requested
+if [[ "$RELEASE_TYPE" == "server" || "$RELEASE_TYPE" == "both" ]]; then
+    SERVER_FILES=""
+    for file in releases/pman-server-*; do
+        if [ -f "$file" ]; then
+            SERVER_FILES="$SERVER_FILES $file"
+        fi
+    done
 
-if [ -n "$SERVER_FILES" ]; then
-    create_release "server-v$SERVER_VERSION" "pman Server v$SERVER_VERSION" "$SERVER_NOTES" "$SERVER_FILES"
-else
-    echo "Warning: No server binaries found in releases/"
+    if [ -n "$SERVER_FILES" ]; then
+        create_release "server-v$SERVER_VERSION" "pman Server v$SERVER_VERSION" "$SERVER_NOTES" "$SERVER_FILES"
+    else
+        echo "Warning: No server binaries found in releases/"
+    fi
 fi
 
 echo ""

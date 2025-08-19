@@ -19,9 +19,10 @@ import (
 )
 
 // expandCombinedFlags expands combined single-character flags like -rf into -r -f
+// and reorders arguments to put flags before positional arguments
 func expandCombinedFlags(args []string) []string {
+	// First pass: expand combined flags and collect all elements
 	var expanded []string
-
 	for _, arg := range args {
 		if strings.HasPrefix(arg, "-") && len(arg) > 2 && arg[1] != '-' {
 			// This is a combined flag like -rf
@@ -33,7 +34,31 @@ func expandCombinedFlags(args []string) []string {
 		}
 	}
 
-	return expanded
+	// Second pass: separate flags (with their values) from positional arguments
+	var result []string
+	var positional []string
+	
+	for i := 0; i < len(expanded); i++ {
+		arg := expanded[i]
+		if strings.HasPrefix(arg, "-") {
+			// This is a flag
+			result = append(result, arg)
+			// Check if this flag expects a value
+			if arg == "-g" || arg == "--group" || arg == "-s" || arg == "-u" || arg == "-p" || arg == "--expire" {
+				// Get the next argument as the value if it exists and isn't a flag
+				if i+1 < len(expanded) && !strings.HasPrefix(expanded[i+1], "-") {
+					i++
+					result = append(result, expanded[i])
+				}
+			}
+		} else {
+			// This is a positional argument
+			positional = append(positional, arg)
+		}
+	}
+
+	// Combine flags and positional arguments with flags first
+	return append(result, positional...)
 }
 
 func ShowHelp() {
